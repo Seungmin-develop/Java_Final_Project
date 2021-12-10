@@ -26,6 +26,7 @@ class RectBlock extends GameObject{
 	int x, y, w, h;
 	Color c;
 	int collideFlag;
+	int itemBlockCollisionFlag;
 	boolean itemBlock;
 	boolean canRemove;
 	boolean isRacket;
@@ -36,11 +37,11 @@ class RectBlock extends GameObject{
 		h=_h;
 		canRemove = _r;
 		collideFlag = 0;
+		itemBlockCollisionFlag = 0;
 		isRacket = false;
+		itemBlock=false;
 		int temp = (int)(Math.random()*10);
-		if(temp<5)
-			itemBlock=false;
-		else
+		if(temp>5 && canRemove==true)
 			itemBlock=true;
 	}
 	@Override
@@ -117,7 +118,7 @@ class Ball extends GameObject{
 		r = 5;
 		stage = _stage;
 		
-		float speed = 100;
+		float speed = 100.0f;
 		vx = -speed-(stage*70);
 		vy = -speed-(stage*70);
 		prev_x = x;
@@ -166,6 +167,9 @@ class Ball extends GameObject{
 		if(prev_x-r>wall.x+wall.w) {
 			x=wall.x+wall.w+r; vx=-vx;
 		}
+		
+		if(wall.itemBlock==true)
+			wall.itemBlockCollisionFlag = 1;
 	}
 
 	@Override
@@ -177,6 +181,9 @@ class Ball extends GameObject{
 class Hw5GamePanel extends JPanel implements KeyListener, Runnable{
 	int stage; // 게임 스테이지
 	int width, height;
+	int addBonusBallFlag = 0;
+	float tempX = 0, tempY = 0, tempVx = 0, tempVy = 0;
+	Ball temp;
 	float dt = 1/30.0f; // 공의 변화가 1/30초에 한번씩 일어나게 하기 위함
 	LinkedList<GameObject> objs = new LinkedList<GameObject>();
 	RectBlock racket = new RectBlock(300,605,170,30, false);
@@ -208,6 +215,7 @@ class Hw5GamePanel extends JPanel implements KeyListener, Runnable{
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
+		
 		for(GameObject o : objs)
 			o.draw(g2);
 		racket.draw(g2);
@@ -230,37 +238,75 @@ class Hw5GamePanel extends JPanel implements KeyListener, Runnable{
 	public void keyReleased(KeyEvent e) {}
 	@Override
 	public void run() {
-		Ball bonusBall1, bonusBall2;
-		float temp_x, temp_y;
 		try {
 			while(true) {
+				// 보너스 공이 생겨야 될 때
+				if(addBonusBallFlag==1) {
+					objs.add(new Ball(tempX, tempY, stage));
+					if(objs.getLast() instanceof Ball) {
+						temp = (Ball)objs.getLast();
+						temp.vx = tempVx * 0.8f;
+						temp.vy = (float)Math.sqrt((tempVx*tempVx+tempVy*tempVy)-(temp.vx*temp.vx));
+						System.out.println(temp.vx+" "+ temp.vy + "\n");
+					}
+					
+					objs.add(new Ball(tempX, tempY, stage));
+					if(objs.getLast() instanceof Ball) {
+						temp = (Ball)objs.getLast();
+						temp.vx = tempVx * 1.18f;
+						temp.vy = (float)Math.sqrt((tempVx*tempVx+tempVy*tempVy)-(temp.vx*temp.vx));
+						System.out.println(temp.vx+" "+ temp.vy + "\n");
+					}
+					
+					addBonusBallFlag=0;
+				}
+				
+				
 				for(GameObject o : objs)
 					o.update(dt);
-				// 공과 벽돌이 충돌했을 때
-				for(GameObject o1 :objs) {
+
+				// 오브젝트 간의 충돌 검사
+				Iterator<GameObject> it = objs.iterator();
+				while(it.hasNext()) {
+					GameObject o1 = (GameObject)it.next();
+					// 공과 라켓의 충돌 검사
 					if(o1 instanceof Ball) {
-						// 라켓과 공이 충돌했을 때
 						o1.collisionResolution(racket);
-						for(GameObject o2:objs) {
+						Iterator<GameObject> it2 = objs.iterator();
+						while(it2.hasNext()) {
+							GameObject o2 = (GameObject)it2.next();
 							if(o1==o2) continue;
-							if(o2 instanceof RectBlock)
+							// 공과 블록의 충돌 검사
+							if(o2 instanceof RectBlock){
 								o1.collisionResolution(o2);
+								if(((RectBlock) o2).itemBlockCollisionFlag==1) {
+									addBonusBallFlag=1;
+									tempX=((Ball) o1).x;
+									tempY=((Ball) o1).y;
+									tempVx = ((Ball)o1).vx;
+									tempVy = ((Ball) o1).vy;
+								}
+							}
 						}
 					}
 				}
 				
-				Iterator<GameObject> it = objs.iterator();
-				while(it.hasNext()) {
+				
+				
+				
+				
+				Iterator<GameObject> it3 = objs.iterator();
+				while(it3.hasNext()) {
 					// 공이 바닥으로 떨어질때
-					if(it.next().isOut()==true)
-						it.remove();
+					if(it3.next().isOut()==true)
+						it3.remove();
 				}
 				
-				Iterator<GameObject> it2 = objs.iterator();
-				while(it2.hasNext()) {
+				Iterator<GameObject> it4 = objs.iterator();
+				while(it4.hasNext()) {
 					// 공이 바닥으로 떨어질때
-					if(it2.next().isRemove()==true)
-						it2.remove();
+					if(it4.next().isRemove()==true)
+						it4.remove();
 				}
 				
 				repaint();
