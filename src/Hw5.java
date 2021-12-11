@@ -40,6 +40,7 @@ class RectBlock extends GameObject{
 	boolean itemBlock;
 	boolean canRemove;
 	boolean isRacket;
+	GradientPaint gp1, gp2, gp3, gp4;
 	RectBlock(int _x, int _y, int _w, int _h, boolean _r){
 		x=_x;
 		y=_y;
@@ -51,37 +52,38 @@ class RectBlock extends GameObject{
 		isRacket = false;
 		itemBlock=false;
 		int temp = (int)(Math.random()*10);
-		if(temp>5 && canRemove==true)
+		if(temp>=5 && canRemove==true)
 			itemBlock=true;
+		
+		gp1 = new GradientPaint(x+w/2,y-2, new Color(100, 100, 100), x+w/2, y+h+2, new Color(0,0,0));
+		gp2 = new GradientPaint(x+w/2,y-2, new Color(251, 198, 198), x+w/2, y+h+2, new Color(55,37,37));
+		gp3 = new GradientPaint(x+w/2,y-2, new Color(253, 253, 0), x+w/2, y+h+2, new Color(70,70, 0));
+		gp4 = new GradientPaint(x+w/2,y-2, new Color(253, 200, 253), x+w/2, y+h+2, new Color(53,35, 53));
 	}
 	@Override
 	void draw(Graphics2D g) {
 		if(canRemove==false) {
 			if(isRacket==false) {
 				c = new Color(100,100,100);
-//				GradientPaint gp = new GradientPaint(x+w/2,y-2, new Color(100, 100, 100), x+w/2, y+h+2, new Color(0,0,0));
-//				g.setPaint(gp);
-//				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
+				g.setPaint(gp1);
+				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
 			}
 			else {
 				c = new Color(150,100,100);
-//				GradientPaint gp = new GradientPaint(x+w/2,y-2, new Color(251, 198, 198), x+w/2, y+h+2, new Color(55,37,37));
-//				g.setPaint(gp);
-//				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
+				g.setPaint(gp2);
+				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
 			}
 		}
 		else {
 			if(itemBlock==true){
 				c = new Color(200,200,0);
-//				GradientPaint gp = new GradientPaint(x+w/2,y-2, new Color(253, 253, 0), x+w/2, y+h+2, new Color(70,70, 0));
-//				g.setPaint(gp);
-//				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
+				g.setPaint(gp3);
+				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
 			}	
 			else{
 				c = new Color(150,100,150);
-//				GradientPaint gp = new GradientPaint(x+w/2,y-2, new Color(253, 200, 253), x+w/2, y+h+2, new Color(53,35, 53));
-//				g.setPaint(gp);
-//				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
+				g.setPaint(gp4);
+				g.fill(new Rectangle2D.Float(x-3, y-3, w+6, h+6));
 			}	
 		}
 		g.setColor(c);
@@ -150,7 +152,7 @@ class Ball extends GameObject implements LineListener{
 		r = 5;
 		stage = _stage;
 		
-		float speed = 50.0f;
+		float speed = 70.0f;
 		vx = -speed-(stage*70);
 		vy = -speed-(stage*70);
 		prev_x = x;
@@ -553,6 +555,7 @@ public class Hw5 extends JFrame implements KeyListener, Runnable, LineListener{
 	Hw5EndPanel ep;
 	int highScore;
 	int gameModeFlag;
+	int vi;
 	Clip clip;
 	Hw5(){
 		try {
@@ -619,12 +622,14 @@ public class Hw5 extends JFrame implements KeyListener, Runnable, LineListener{
 		
 		// 게임 실행 중 좌우 방향키를 이용해 라켓 이동
 		if(gameModeFlag==2 && e.getKeyCode()==KeyEvent.VK_LEFT) {
-			if(gp.racket.x>20)
-				gp.racket.x-=20;
+			if(gp.racket.x>30)
+				gp.racket.x-=(10+vi);
+			vi++;
 		}
 		if(gameModeFlag==2 && e.getKeyCode()==KeyEvent.VK_RIGHT) {
-			if(gp.racket.x<=590)
-				gp.racket.x+=20;
+			if(gp.racket.x<=580)
+				gp.racket.x+=(10+vi);
+			vi++;
 		}
 		
 		if(gameModeFlag==3&&e.getKeyCode()==KeyEvent.VK_SPACE) {
@@ -639,8 +644,7 @@ public class Hw5 extends JFrame implements KeyListener, Runnable, LineListener{
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-		
+		vi=0;
 	}
 
 	@Override
